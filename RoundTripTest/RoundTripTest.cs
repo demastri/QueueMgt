@@ -33,10 +33,15 @@ namespace RoundTripTest
         static void Main(string[] args)
         {
             BuildPublishers();
+            Console.WriteLine("Publishers live, press Enter to consume");
+            Console.ReadLine();
+
             BuildConsumers();
             ValidateResults();
 
             BuildPublishers();
+            Console.WriteLine("Async Publishers live, press Enter to consume");
+            Console.ReadLine();
             BuildAsyncConsumers();
             System.Threading.Thread.Sleep(1000);
             ValidateResults();
