@@ -129,8 +129,9 @@ namespace QueueCommon
         }
         public void Close()
         {
-            foreach (string rk in routingKeys)
-                thisExch.channel.QueueUnbind(queueName, thisExch.name, rk, null);
+            foreach (string rk in routingKeys )
+                if( thisExch.IsOpen && thisExch.channel.IsOpen )
+                    thisExch.channel.QueueUnbind(queueName, thisExch.name, rk, null);
         }
     }
 }

@@ -95,6 +95,8 @@ namespace QueueCommon
         public void Close()
         {
             channel.Close(200, "Goodbye");
+            if( thisConnection.IsOpen )
+                thisConnection.Close();
         }
 
     }

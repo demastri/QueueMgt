@@ -1,6 +1,4 @@
-﻿#undef UseQWrapper
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,9 +21,6 @@ namespace RoundTripTest
         static List<string> ModelRequests = new List<string>();
         static List<string> SeparateRequests = new List<string>();
 
-#if UseQWrapper
-        static RabbitMQWrapper asyncWrap = null;
-#endif
         static QueueingModel asyncModel = null;
         static Exchange asyncExch = null;
         static Queue asyncQueue = null;
@@ -49,19 +44,16 @@ namespace RoundTripTest
         }
         static void BuildPublishers()
         {
-            TestQWrapperPub();
             TestQModelPub();
             TestSeparatePub();
         }
         static void BuildConsumers()
         {
-            TestQWrapperRead();
             TestQModelRead();
             TestSeparateRead();
         }
         static void BuildAsyncConsumers()
         {
-            TestQWrapperReadAsync();
             TestQModelReadAsync();
             TestSeparateReadAsync();
         }
@@ -75,20 +67,6 @@ namespace RoundTripTest
 
         #region publishers
 
-        static public void TestQWrapperPub()
-        {
-#if UseQWrapper
-            RabbitMQWrapper pubQueue = new RabbitMQWrapper(
-                exchName, "QWrap", "QWrap", hostName, uid, pwd, port);
-            for (int i=0; i < 5; i++)
-            {
-                string outMsg = "Hello World " + i.ToString();
-                WrapRequests.Add(outMsg);
-                pubQueue.PostMessage(outMsg);
-            }
-            pubQueue.CloseConnections();
-#endif
-        }
         static public void TestQModelPub()
         {
             QueueingModel pubQueue = new QueueingModel(
@@ -119,22 +97,6 @@ namespace RoundTripTest
         #endregion
 
         #region readers
-
-        static void TestQWrapperRead()
-        {
-#if UseQWrapper
-            RabbitMQWrapper subQueue = new RabbitMQWrapper(
-                exchName, "QWrap", "QWrap", hostName, uid, pwd, port);
-
-            while (!subQueue.QueueEmpty())
-            {
-                string gotOne = subQueue.ReadMessageAsString();
-                if (WrapRequests.Contains(gotOne))
-                    WrapRequests.Remove(gotOne);
-            }
-            subQueue.CloseConnections();
-#endif
-        }
         static void TestQModelRead()
         {
             QueueingModel subQueue = new QueueingModel(
@@ -166,15 +128,6 @@ namespace RoundTripTest
 
         #region async readers
 
-        static void TestQWrapperReadAsync()
-        {
-#if UseQWrapper
-            asyncWrap = new RabbitMQWrapper(
-                exchName, "QWrap", "QWrap", hostName, uid, pwd, port);
-
-            asyncWrap.SetListenerCallback(PullWrapper);
-#endif
-        }
         static void PullWrapper(byte[] msg)
         {
             string gotOne = System.Text.Encoding.Default.GetString(msg);
@@ -209,9 +162,6 @@ namespace RoundTripTest
 
         static void CloseAsync()
         {
-#if UseQWrapper
-            asyncWrap.CloseConnections();
-#endif
             asyncModel.CloseConnections();
             asyncQueue.Close();
             asyncExch.Close();
