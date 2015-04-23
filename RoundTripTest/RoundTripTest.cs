@@ -81,8 +81,9 @@ namespace RoundTripTest
         }
         static public void TestSeparatePub()
         {
-            Exchange pubExch = new Exchange(exchName, exchType, hostName, uid, pwd, port);
-            Queue pubQueue = new Queue(pubExch, "Separate", "Separate");
+            ConnectionDetail conn = new ConnectionDetail(hostName, port,exchName, exchType, "Separate", "Separate", uid, pwd);
+            Exchange pubExch = new Exchange(conn);
+            Queue pubQueue = new Queue(pubExch, conn);
 
             for (int i = 0; i < 5; i++)
             {
@@ -112,8 +113,9 @@ namespace RoundTripTest
         }
         static void TestSeparateRead()
         {
-            Exchange subExch = new Exchange(exchName, exchType, hostName, uid, pwd, port);
-            Queue subQueue = new Queue(subExch, "Separate", "Separate");
+            ConnectionDetail conn = new ConnectionDetail(hostName, port, exchName, exchType, "Separate", "Separate", uid, pwd);
+            Exchange subExch = new Exchange(conn);
+            Queue subQueue = new Queue(subExch, conn);
 
             while (!subQueue.IsEmpty)
             {
@@ -149,8 +151,10 @@ namespace RoundTripTest
         }
         static void TestSeparateReadAsync()
         {
-            asyncExch = new Exchange(exchName, exchType, hostName, uid, pwd, port);
-            asyncQueue = new Queue(asyncExch, "Separate", "Separate");
+            ConnectionDetail conn = new ConnectionDetail(hostName, port, exchName, exchType, "Separate", "Separate", uid, pwd);
+            asyncExch = new Exchange(conn);
+
+            asyncQueue = new Queue(asyncExch, conn);
             asyncQueue.SetListenerCallback(PullSeparate);
         }
         static void PullSeparate(byte[] msg, string routeKey)

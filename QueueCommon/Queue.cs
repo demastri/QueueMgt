@@ -9,41 +9,36 @@ namespace QueueCommon
 {
     public class Queue
     {
+        ConnectionDetail thisConnDetail;
+
         Exchange thisExch = null;
         QueueDeclareOk dok = null;
         RabbitMQ.Client.Events.EventingBasicConsumer consumer = null;
 
-        string queueName = "";
-        public string name { get { return queueName; } }
-        List<string> routingKeys;
+        public string name { get { return thisConnDetail.queueName; } }
         int messagesSent = 0;
         ReadQueueHandler clientCallback = null;
 
         public delegate void ReadQueueHandler(byte[] result, string routeKey);
         public event ReadQueueHandler SubscribedMessageReceived;
 
-        public Queue(Exchange exch, string qName, string route)
-        {
-            BaseInit();
-            queueName = qName;
-            routingKeys.Add(route);
-            thisExch = exch;    // the assumption is that this is pretty fully initialized by now...
-            InitQueue();
-        }
-        public Queue(Exchange exch, string qName, List<string> routes)
-        {
-            BaseInit();
-            queueName = qName;
-            foreach (string s in routes)
-                routingKeys.Add(s);
-            thisExch = exch;    // the assumption is that this is pretty fully initialized by now...
-            InitQueue();
-        }
 
+        public Queue(Exchange exch, ConnectionDetail conn)
+        {
+            BaseInit(conn);
+            thisExch = exch;    // the assumption is that this is pretty fully initialized by now...
+            InitQueue();
+        }
         private void BaseInit()
         {
-            queueName = System.Guid.NewGuid().ToString();
-            routingKeys = new List<string>();
+            BaseInit( new ConnectionDetail() );
+        }
+        private void BaseInit(ConnectionDetail cd)
+        {
+            thisConnDetail = cd.Copy();
+            if (thisConnDetail.queueName == "")
+                thisConnDetail = thisConnDetail.UpdateQueueDetail(System.Guid.NewGuid().ToString(), null);
+            
             messagesSent = 0;
             consumer = null;
             clientCallback = null;
@@ -54,9 +49,9 @@ namespace QueueCommon
 
         private void InitQueue()
         {
-            dok = thisExch.channel.QueueDeclare(queueName, false, false, false, null);
-            foreach (string rk in routingKeys)
-                thisExch.channel.QueueBind(queueName, thisExch.name, rk, null);
+            dok = thisExch.channel.QueueDeclare(thisConnDetail.queueName, false, false, false, null);
+            foreach (string rk in thisConnDetail.routeKeys)
+                thisExch.channel.QueueBind(thisConnDetail.queueName, thisExch.name, rk, null);
             // the routing keys determine what this queue wants to LISTEN to - can be multiple!!
         }
 
@@ -65,7 +60,7 @@ namespace QueueCommon
             consumer = thisExch.CreateConsumer();
             consumer.Received += LocalCallback;
             SubscribedMessageReceived += callback;
-            thisExch.channel.BasicConsume(queueName, true, consumer);
+            thisExch.channel.BasicConsume(thisConnDetail.queueName, true, consumer);
         }
         private void LocalCallback(Object o, RabbitMQ.Client.Events.BasicDeliverEventArgs e)
         {
@@ -76,12 +71,12 @@ namespace QueueCommon
 
         public uint MessageCount()
         {
-            dok = thisExch.channel.QueueDeclarePassive(queueName);
+            dok = thisExch.channel.QueueDeclarePassive(thisConnDetail.queueName);
             return dok.MessageCount;
         }
         public void PostMessage(string someMessage)
         {
-            thisExch.PostMessage(someMessage, routingKeys[0]);
+            thisExch.PostMessage(someMessage, thisConnDetail.routeKeys[0]);
         }
         public void PostMessage(string someMessage, string thisRK)
         {
@@ -100,7 +95,7 @@ namespace QueueCommon
         public byte[] ReadMessage(bool noAck)
         {
             byte[] body = null;
-            BasicGetResult result = thisExch.channel.BasicGet(queueName, noAck);
+            BasicGetResult result = thisExch.channel.BasicGet(thisConnDetail.queueName, noAck);
             if (result != null)
             {
                 IBasicProperties props = result.BasicProperties;
@@ -129,9 +124,9 @@ namespace QueueCommon
         }
         public void Close()
         {
-            foreach (string rk in routingKeys )
+            foreach (string rk in thisConnDetail.routeKeys )
                 if( thisExch.IsOpen && thisExch.channel.IsOpen )
-                    thisExch.channel.QueueUnbind(queueName, thisExch.name, rk, null);
+                    thisExch.channel.QueueUnbind(thisConnDetail.queueName, thisExch.name, rk, null);
         }
     }
 }

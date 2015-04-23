@@ -9,51 +9,34 @@ namespace QueueCommon
 {
     public class Exchange
     {
+        ConnectionDetail thisConnDetail;
+
         ConnectionFactory thisFactory = null;
         IConnection thisConnection = null;
         IModel thisModel;
 
-        string hostName;
-        string uid;
-        string pwd;
-        int port;
-        string exchName;
-        string exchType;
-
-        public string name { get { return exchName; } }
+        public string name { get { return thisConnDetail.exchName; } }
         public IModel channel { get { return thisModel; } }
         public bool IsOpen { get { return thisModel != null && thisModel.IsOpen; } }
         public bool IsClosed { get { return !IsOpen; } }
 
-        public Exchange(string exchangeName, string exchangeType, string host, string user, string pass, int qPort)
+        public Exchange(ConnectionDetail connDetail)
         {
-            BaseInit();
-            exchName = exchangeName;
-            hostName = host;
-            uid = user;
-            pwd = pass;
-            port = qPort;
-            exchType = exchangeType;
-            InitExchange();
-        }
-        public Exchange()
-        {
-            BaseInit();
+            BaseInit(connDetail);
             InitExchange();
         }
         private void BaseInit()
         {
-            hostName = "localhost";
-            uid = "guest";
-            pwd = "guest";
-            port = 5672;
-            exchName = System.Guid.NewGuid().ToString();
-            exchType = ExchangeType.Direct;
+            BaseInit(new ConnectionDetail());
+        }
+        private void BaseInit(ConnectionDetail connDetail)
+        {
+            thisConnDetail = connDetail.Copy();
         }
         private void InitExchange()
         {
             thisFactory = new ConnectionFactory();
-            thisFactory.Uri = "amqp://" + uid + ":" + pwd + "@" + hostName + ":" + port.ToString();//        amqp://user:pass@hostName:port/vhost";
+            thisFactory.Uri = thisConnDetail.Uri;
             try
             {
                 thisConnection = thisFactory.CreateConnection();
@@ -66,14 +49,14 @@ namespace QueueCommon
             if (thisConnection != null)
             {
                 thisModel = thisConnection.CreateModel();
-                channel.ExchangeDeclare(exchName, exchType);
+                channel.ExchangeDeclare(thisConnDetail.exchName, thisConnDetail.exchType);
             }
         }
 
         public QueueDeclareOk CreateQueue(string qName, string routeKey)
         {
             QueueDeclareOk outOk = thisModel.QueueDeclare(qName, false, false, false, null);
-            thisModel.QueueBind(qName, exchName, routeKey, null);
+            thisModel.QueueBind(qName, thisConnDetail.exchName, routeKey, null);
             return outOk;
         }
 

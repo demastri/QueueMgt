@@ -8,20 +8,30 @@ namespace QueueCommon
 {
     public class QueueingModel
     {
+        ConnectionDetail myConn;
         Exchange myExchange;
         Queue myQueue;
 
+        public QueueingModel(ConnectionDetail conn)
+        {
+            myConn = conn;
+            myExchange = new Exchange(conn);
+
+            myQueue = new Queue(myExchange, conn);
+        }
         public QueueingModel(string exchName, string exchType, string qName, List<string> routeKeys, string host, string user, string pass, int qPort)
         {
-            myExchange = new Exchange(exchName, exchType, host, user, pass, qPort);
+            myConn = new ConnectionDetail(host, qPort, exchName, exchType, qName, routeKeys, user, pass);
+            myExchange = new Exchange(myConn);
 
-            myQueue = new Queue(myExchange, qName, routeKeys);
+            myQueue = new Queue(myExchange, myConn);
         }
         public QueueingModel(string exchName, string exchType, string qName, string routeKey, string host, string user, string pass, int qPort)
         {
-            myExchange = new Exchange(exchName, exchType, host, user, pass, qPort);
+            myConn = new ConnectionDetail(host, qPort, exchName, exchType, qName, routeKey, user, pass);
+            myExchange = new Exchange(myConn);
 
-            myQueue = new Queue(myExchange, qName, routeKey);
+            myQueue = new Queue(myExchange, myConn);
         }
         public bool IsOpen { get { return myExchange.IsOpen && myQueue.IsOpen; } }
         public bool IsClosed { get { return myExchange.IsClosed || myQueue.IsClosed; } }
@@ -47,8 +57,6 @@ namespace QueueCommon
         {
             myQueue.PostMessage(someMessage, thisRK);
         }
-
-
 
         public void PostTestMessages()
         {

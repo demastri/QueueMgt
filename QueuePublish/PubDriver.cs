@@ -43,8 +43,9 @@ namespace QueuePublish
         }
         static public void TestSeparate()
         {
-            Exchange pubExch = new Exchange("AnalysisFarm", "localhost", "", "", "", 5);
-            Queue pubQueue = new Queue( pubExch, "AnalysisRequest", "");
+            ConnectionDetail conn = new ConnectionDetail("localhost", 5, "AnalysisFarm", "", "AnalysisRequest", "", "", "");
+            Exchange pubExch = new Exchange(conn);
+            Queue pubQueue = new Queue( pubExch, conn);
 
             while (!Console.KeyAvailable)
             {
