@@ -48,7 +48,8 @@ namespace QueueCommon
             queueName = qName;
             routeKeys = new List<string>();
             foreach (string s in rKeys)
-                routeKeys.Add(s);
+                if( s != "" )
+                    routeKeys.Add(s);
 
             user = uid;
             pass = pwd;
@@ -64,7 +65,8 @@ namespace QueueCommon
 
             queueName = qName;
             routeKeys = new List<string>();
-            routeKeys.Add(rKey);
+            if( rKey != "" )
+                routeKeys.Add(rKey);
 
             user = uid;
             pass = pwd;
@@ -86,20 +88,20 @@ namespace QueueCommon
         public ConnectionDetail Update(ConnectionDetail connDetail)
         {
             ConnectionDetail outConn = new ConnectionDetail();
-            outConn.host = (connDetail == null || connDetail.host != "") ? host : connDetail.host;
-            outConn.port = (connDetail == null || connDetail.port != -1) ? port : connDetail.port;
-            outConn.exchName = (connDetail == null || connDetail.exchName != "") ? exchName : connDetail.exchName;
-            outConn.exchType = (connDetail == null || connDetail.exchType != "") ? exchType : connDetail.exchType;
-            outConn.queueName = (connDetail == null || connDetail.queueName != "") ? queueName : connDetail.queueName;
-            outConn.host = (connDetail == null || connDetail.host != "") ? host : connDetail.host;
+            outConn.host = (connDetail == null || connDetail.host == "") ? host : connDetail.host;
+            outConn.port = (connDetail == null || connDetail.port == -1) ? port : connDetail.port;
+            outConn.exchName = (connDetail == null || connDetail.exchName == "") ? exchName : connDetail.exchName;
+            outConn.exchType = (connDetail == null || connDetail.exchType == "") ? exchType : connDetail.exchType;
+            outConn.queueName = (connDetail == null || connDetail.queueName == "") ? queueName : connDetail.queueName;
+            outConn.host = (connDetail == null || connDetail.host == "") ? host : connDetail.host;
             if (connDetail != null && connDetail.routeKeys != null && connDetail.routeKeys.Count() > 0)
                 foreach (string s in connDetail.routeKeys)
                     outConn.routeKeys.Add(s);
             else
                 foreach (string s in routeKeys)
                     outConn.routeKeys.Add(s);
-            outConn.user = (connDetail == null || connDetail.user != "") ? user : connDetail.user;
-            outConn.pass = (connDetail == null || connDetail.pass != "") ? pass : connDetail.pass;
+            outConn.user = (connDetail == null || connDetail.user == "") ? user : connDetail.user;
+            outConn.pass = (connDetail == null || connDetail.pass == "") ? pass : connDetail.pass;
 
             return outConn;
         }
